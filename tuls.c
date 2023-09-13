@@ -6,6 +6,7 @@
 
 //prototype for recursive function
 void openAll(const char* name, int n);
+char *fileCombine(const char *a, char *b);
 
 //main
 int main (int argc, char *argv[] ){
@@ -106,11 +107,10 @@ void openAll(const char* name, int n){
       printf("[%s]\n", d->d_name); //print the name
 			
 			//now creating a new string that contains the path of the new folder
-			char newName[50]; //container for new file name
-			strcat(newName, name); //creating new file name
-			strcat(newName, "/");
-			strcat(newName, d->d_name);
+			//did this through a function with malloc because an array was giving me issues
+			char* newName = fileCombine(name, d->d_name); 
 			openAll(newName, n+1); //calling function recursively on new name
+			free(newName); //freeing the memeory
       } 
 			
 		else { //if it's just a file, print with correct spaces
@@ -120,4 +120,18 @@ void openAll(const char* name, int n){
 	}
 	closedir(directory); //closing directory
 	return;
-} 
+}
+
+//made a program to dynamically allocate the memory for the new path name
+//because doing it with an array gave me issues
+char *fileCombine(const char *a, char *b) {
+	char *ret = malloc(strlen(a) + strlen(b) + 2);
+	int x = 0;
+	int y = 0;
+
+	for (x = 0; (ret[y] = a[x]) != '\0'; ++x, ++y);//copying first string to array
+	ret[y] = '/'; //adding a /
+	y++;
+	for (x = 0; (ret[y] = b[x]) != '\0'; ++x, ++y); //copying second string to array
+	return ret; //returning
+}
