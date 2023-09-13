@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 
-//prototypw for recursive function
+//prototype for recursive function
 void openAll(const char* name, int n);
 
 //main
@@ -27,11 +27,9 @@ int main (int argc, char *argv[] ){
 			return 1;
 		}
 
-
-		d = readdir(directory); //assigning the next entry in the directory as d
-		while (d != NULL){ //go through all of the entries
-			printf("%s\n", d->d_name); //print the
-			d = readdir(directory);
+		//assigning the next entry in the directory as d
+		while ((d = readdir(directory)) != 0){ //go through all of the entries
+			printf("%s\n", d->d_name); //print name of each entry
 		}
 		closedir(directory);
 		return 0;
@@ -40,7 +38,8 @@ int main (int argc, char *argv[] ){
 	else { //1-arg call to nulls
 		DIR *directory; //setting up directory
     struct dirent *d;
-    directory = opendir(".");
+    directory = opendir("."); //opening current directory
+		int check = 0; //check to make sure the file was found in the directory
 
     if (directory == NULL){ //error checking
     	closedir(directory);
@@ -62,6 +61,7 @@ int main (int argc, char *argv[] ){
 				else { //if the argument matches a directory, calls recursive function
 					printf("[%s]\n", d->d_name);
 					openAll(d->d_name, 1);
+					check = 1;
 				}
       } 
 			
@@ -71,9 +71,13 @@ int main (int argc, char *argv[] ){
 		}
 
 		closedir(directory); //closing directory
-	}
 
-	return 0;
+		if (check == 0){ //checking to see if entire function ran without finding a directory with the name of the argument
+			printf("tuls: directory %s not found\n", argv[1]);
+			return 1;
+		}
+	}	
+	return 0; //exiting the program with no errors
 }
 
 
@@ -81,36 +85,39 @@ int main (int argc, char *argv[] ){
 //spaces to put in front of each line when printing out
 void openAll(const char* name, int n){
 
-	DIR *directory;
+	DIR *directory; //setting up directory and entries as before
 	struct dirent *d;
 	directory = opendir(name);
 
-	if (directory == NULL){
+	if (directory == NULL){ //error handling
 		printf("%s", "tuls: cannot open directory\n");
 		return;
 	} 
 
 	while ((d = readdir(directory)) != 0){
 
-		if (strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0 || strcmp(d->d_name, ".DS_Store") == 0){
-
+		if (strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0){
+			//Don't print out the . and .. each time
 		} 
 		
+		//if it gets to a directory
 		else if (d->d_type == DT_DIR){
-			printf("%*c", 2*n, ' ');
-      printf("[%s]\n", d->d_name);
-			char newName[50];
-			strcat(newName, name);
+			printf("%*c", 2*n, ' '); //print spaces 
+      printf("[%s]\n", d->d_name); //print the name
+			
+			//now creating a new string that contains the path of the new folder
+			char newName[50]; //container for new file name
+			strcat(newName, name); //creating new file name
 			strcat(newName, "/");
 			strcat(newName, d->d_name);
-			openAll(newName, n+1);
+			openAll(newName, n+1); //calling function recursively on new name
       } 
 			
-		else {
+		else { //if it's just a file, print with correct spaces
 			printf("%*c", 2*n, ' ');
-      printf("%s\n", d->d_name);
+      printf("->%s\n", d->d_name);
     }
 	}
-	closedir(directory);
+	closedir(directory); //closing directory
 	return;
 } 
